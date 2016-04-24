@@ -1,0 +1,70 @@
+# <project> servers
+upstream <project> {
+  server 127.0.0.1:5000;
+  keepalive 8;
+}
+
+# Main server
+server {
+  listen 80;
+  server_name app.<project>.com;
+  server_tokens off;
+
+  access_log /var/log/nginx/<project>_access.log;
+  error_log  /var/log/nginx/<project>_error.log;
+
+  # decrease amount of time a request can sit idle
+  keepalive_timeout 20;
+
+  # speed up file transfers
+  sendfile on;
+
+  # send response header & beginning of file in one packet / sending file in full packets
+  tcp_nopush on;
+
+  # Collate smaller packets into fewer larger ones
+  tcp_nodelay off;
+
+  # gzip settings
+  gzip on;
+  gzip_http_version 1.0;
+  gzip_buffers 16 8k;
+  gzip_comp_level 6;
+  gzip_min_length 512;
+  gzip_proxied any;
+  gzip_vary on;
+  gzip_types
+    application/javascript
+    application/json
+    text/css
+    text/html
+    text/javascript
+    text/plain;
+
+  # Proxy settings
+  proxy_http_version 1.1;
+  proxy_redirect off;
+
+  proxy_set_header  Host               $http_host;
+  proxy_set_header  X-Real-IP          $remote_addr;
+  proxy_set_header  X-Forwarded-For    $proxy_add_x_forwarded_for;
+  proxy_set_header  X-Forwarded-Proto  $scheme;
+
+### NOTE ONE OF THE BELOW locations for /
+
+  # Proxy to <project> upstream
+  location / {
+    # set to a variable so nginx will re-resolve DNS records based on their TTL (in case the upstream is changing its IP address)
+    set $<project>_upstream "http://<project>/";
+    proxy_pass $<project>_upstream;
+  }
+
+  # serve files
+  location / {
+    root /www-data/<project>/public;
+    try_files $uri
+              $uri/index.html
+              $uri.html
+              =404;
+  }
+}

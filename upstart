@@ -1,0 +1,32 @@
+#!upstart
+description "Upstart for eyecarrot-site node.js server"
+
+start on startup
+stop on shutdown
+
+# Report the pid of the node.js process start by forever
+expect fork
+
+env API_DIR="/home/ubuntu/eyecarrot-site"
+env PID_FILE="/home/ubuntu/.forever/pids/eyecarrot-site.pid"
+env LOG_FILE="/home/ubuntu/.forever/eyecarrot-site.log"
+env NODE_PATH="/usr/bin/node"
+
+script
+  cd $API_DIR
+  exec forever \
+    --pidFile $PID_FILE \
+    -a \
+    -l $LOG_FILE \
+    start app.js
+end script
+
+#TODO: $APP_JS not in use.. pm2 is more better?
+pre-stop script
+  exec forever stop $APP_JS
+  rm $PID_FILE
+end script
+
+respawn
+# limits respawn to a count during an interval in seconds
+respawn limit 10 5

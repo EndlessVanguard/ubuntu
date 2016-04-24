@@ -1,0 +1,4 @@
+15 2 * * * sudo -u postgres pg_dump -Fc <database> > /home/ubuntu/<project>_backup/<project>_daily.dump
+20 2 * * * /usr/bin/node /home/ubuntu/s3-backup/index.js /home/ubuntu/<project>_backup/<project>_daily.dump >> /home/ubuntu/<project>_backup/daily.log
+15 3 * * 1 sudo -u postgres pg_dump -Fc <database> > /home/ubuntu/<project>_backup/<project>_weekly.dump
+20 3 * * 1 /usr/bin/node /home/ubuntu/s3-backup/index.js /home/ubuntu/<project>_backup/<project>_weekly.dump >> /home/ubuntu/<project>_backup/weekly.log
